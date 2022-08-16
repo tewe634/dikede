@@ -40,7 +40,7 @@
         </el-row>
 
       </el-form-item>
-      <el-button type="primary" class="login-btn" style="width:100%;margin-bottom:30px;" @click="loginBtn">登录</el-button>
+      <el-button type="primary" class="login-btn" style="width:100%;margin-bottom:30px;" :loading="loading" @click="loginBtn">登录</el-button>
     </el-form>
   </div>
 </template>
@@ -70,14 +70,13 @@ export default {
         ]
       },
       isShow: false,
-      url: ''
-      // num: Math.random()
+      url: '',
+      loading: false
     }
   },
   async created() {
     try {
       const res = await imgeCode(this.loginForm.clientToken)
-      console.log(res)
       this.url = res.config.url
     } catch (error) {
       console.log(error)
@@ -92,9 +91,11 @@ export default {
     },
     // 登入
     async loginBtn() {
+      this.loading = true
       try {
         await this.$refs.loginForm.validate()
         await this.$store.dispatch('user/login', this.loginForm)
+        this.loading = false
         this.$router.push('/home')
       } catch (error) {
         console.log(error.message)
