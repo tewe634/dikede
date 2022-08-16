@@ -75,12 +75,7 @@ export default {
     }
   },
   async created() {
-    try {
-      const res = await imgeCode(this.loginForm.clientToken)
-      this.url = res.config.url
-    } catch (error) {
-      console.log(error)
-    }
+    this.toggleImg()
   },
   methods: {
     changePwd() {
