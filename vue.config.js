@@ -36,7 +36,16 @@ module.exports = {
       warnings: false,
       errors: true
     },
-    before: require('./mock/mock-server.js')
+    proxy: {
+      '/api': {
+        target: 'http://likede2-admin.itheima.net/likede/',
+        changeOrigin: true
+        // pathRewrite: {
+        //   // 重新路由  localhost:8888/api/login  => www.baidu.com/login
+        //   '^/api': '' // 假设我们想把 localhost:8888/api/login 变成www.baidu.com/api/login 就需要这么做
+        // }
+      }
+    }
   },
   configureWebpack: {
     // provide the app's title in webpack's name field, so that
