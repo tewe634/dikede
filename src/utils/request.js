@@ -14,7 +14,6 @@ const service = axios.create({
 service.interceptors.request.use(
   async(config) => {
     if (store.getters.token) { // 如果有token就放在请求头上
-      console.log(LogOutTimer())
       if (LogOutTimer()) { // 调用函数，token超时会返回true触发判断
         await store.commit('user/LOGOUT')
         router.push('/login')
