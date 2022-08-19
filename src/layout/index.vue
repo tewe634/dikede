@@ -1,11 +1,13 @@
 <template>
-  <div :class="classObj" class="app-wrapper">
-    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
+  <div class="app-wrapper">
+    <!-- 头部 -->
+    <div class="navbar">
+      <navbar />
+    </div>
+    <!-- 左侧导航 -->
     <sidebar class="sidebar-container" />
+    <!-- 中间内容 -->
     <div class="main-container">
-      <div :class="{'fixed-header':fixedHeader}">
-        <navbar />
-      </div>
       <app-main />
     </div>
   </div>
@@ -13,8 +15,7 @@
 
 <script>
 import { Navbar, Sidebar, AppMain } from './components'
-import ResizeMixin from './mixin/ResizeHandler'
-
+import { mapGetters } from 'vuex'
 export default {
   name: 'Layout',
   components: {
@@ -22,31 +23,13 @@ export default {
     Sidebar,
     AppMain
   },
-  mixins: [ResizeMixin],
   computed: {
-    sidebar() {
-      return this.$store.state.app.sidebar
-    },
-    device() {
-      return this.$store.state.app.device
-    },
-    fixedHeader() {
-      return this.$store.state.settings.fixedHeader
-    },
-    classObj() {
-      return {
-        hideSidebar: !this.sidebar.opened,
-        openSidebar: this.sidebar.opened,
-        withoutAnimation: this.sidebar.withoutAnimation,
-        mobile: this.device === 'mobile'
-      }
-    }
+    ...mapGetters(['userId'])
   },
-  methods: {
-    handleClickOutside() {
-      this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
-    }
+  mounted() {
+    this.$store.dispatch('user/setUserInfo', this.userId)
   }
+
 }
 </script>
 
@@ -64,30 +47,36 @@ export default {
       top: 0;
     }
   }
-  .drawer-bg {
-    background: #000;
-    opacity: 0.3;
+  .navbar {
+    height: 60px;
     width: 100%;
-    top: 0;
-    height: 100%;
-    position: absolute;
-    z-index: 999;
-  }
-
-  .fixed-header {
     position: fixed;
     top: 0;
     right: 0;
-    z-index: 9;
-    width: calc(100% - #{$sideBarWidth});
-    transition: width 0.28s;
+    z-index: 1999;
+    background-image: url('~@/assets/img/titlebg.png');
+    background-size: cover;
+    background-repeat: no-repeat;
   }
-
-  .hideSidebar .fixed-header {
-    width: calc(100% - 54px)
+  .sidebar-container {
+    width: 167px!important;
+    min-height: calc(100% - 60px);
+    position: fixed;
+    font-size: 0;
+    top: 60px;
+    bottom: 0;
+    left: 0;
+    z-index: 1001;
+    overflow: hidden;
   }
-
-  .mobile .fixed-header {
-    width: 100%;
+  .main-container {
+    height: 100%;
+    -webkit-transition: margin-left .28s;
+    transition: margin-left .28s;
+    padding-top: 60px;
+    margin-left: 167px;
+    position: relative;
+    background-color: #f8fafd;
+    overflow: hidden;
   }
 </style>

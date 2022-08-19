@@ -90,17 +90,17 @@ export default {
       try {
         await this.$refs.loginForm.validate()
         await this.$store.dispatch('user/login', this.loginForm)
-        this.loading = false
         this.$router.push('/home')
       } catch (error) {
         console.log(error.message)
+      } finally {
+        this.loading = false
       }
     },
     async toggleImg() {
       this.loginForm.clientToken = this.loginForm.clientToken + 1
       try {
         const res = await imgeCode(this.loginForm.clientToken)
-        console.log(res)
         this.url = res.config.url
       } catch (error) {
         console.log(error)
