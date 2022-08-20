@@ -1,6 +1,7 @@
 import axios from 'axios'
 import store from '@/store'
 import router from '@/router'
+import { Message } from 'element-ui'
 const logOut = 3600 // 超时的时间一个小时
 function LogOutTimer() { // 设置一个函数判断token是否超时
   return (Date.now() - store.getters.hrsaasTime) / 1000 > logOut
@@ -33,7 +34,15 @@ service.interceptors.response.use(
   (response) => {
     return response
   },
-  (error) => {
+  async(error) => {
+    console.log(error.response)
+    // 被从处理token超时，通过后端返回的信息来判断
+    if (error.response?.data === 'token校验失败') {
+      await store.commit('user/LOGOUT')
+      router.push('/login')
+    } else {
+      Message.error(error.Message || '')
+    }
     return Promise.reject(error)
   }
 )

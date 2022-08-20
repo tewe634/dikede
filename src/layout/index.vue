@@ -71,8 +71,8 @@ export default {
   }
   .main-container {
     height: 100%;
-    -webkit-transition: margin-left .28s;
-    transition: margin-left .28s;
+    // -webkit-transition: margin-left .28s;
+    // transition: margin-left .28s;
     padding-top: 60px;
     margin-left: 167px;
     position: relative;

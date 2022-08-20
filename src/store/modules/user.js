@@ -65,6 +65,5 @@ export default {
         console.log(error)
       }
     }
-  },
-  getters: {}
+  }
 }

@@ -1,10 +1,14 @@
 <template>
-  <div>business</div>
+  <div>
+    <table-list />
+  </div>
 </template>
 
 <script>
+import tableList from '@/components/tableList'
 export default {
-  name: 'Business'
+  name: 'Business',
+  components: { tableList }
 }
 </script>
 

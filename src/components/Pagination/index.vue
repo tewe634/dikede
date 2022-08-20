@@ -29,20 +29,16 @@ export default {
       type: Number,
       default: 0
     },
-    pageSize: {
-      type: Number,
-      default: 10
-    },
     currentPage: {
       type: Number,
       default: 1
+    },
+    totalPage: {
+      type: Number,
+      required: true
     }
   },
-  computed: {
-    totalPage() {
-      return Math.ceil(this.total / this.pageSize)
-    }
-  },
+
   methods: {
     currentPageChange(val) {
       this.$emit('changePageEvent', val)
