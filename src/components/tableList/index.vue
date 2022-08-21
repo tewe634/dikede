@@ -18,9 +18,12 @@
     <!-- 表格 -->
     <div class="result">
       <!-- 按钮 -->
-      <el-row>
-        <el-button class="el-button--primary1" icon="el-icon-circle-plus-outline">新建</el-button>
-        <el-button v-if="!isRepair" style="background-color:#fbf4f0; color:#000">工单配置</el-button>
+      <el-row v-if="!isRepair">
+        <el-button class="el-button--primary1" icon="el-icon-circle-plus-outline" @click="newTasks">新建</el-button>
+        <el-button style="background-color:#fbf4f0; color:#000" @click="deploy">工单配置</el-button>
+      </el-row>
+      <el-row v-else>
+        <el-button class="el-button--primary1" icon="el-icon-circle-plus-outline" @click="opsTask">新建</el-button>
       </el-row>
       <!-- 表格 -->
       <el-table
@@ -71,24 +74,65 @@
           label="操作"
           width="100"
         >
-          <span style="cursor: pointer;color:#4368e1" @click="isShow = true">查看详情</span>
+          <template slot-scope="{row}">
+            <span style="cursor: pointer;color:#4368e1" @click="details(row.taskId)">查看详情</span>
+          </template>
         </el-table-column>
       </el-table>
       <!-- 分页 -->
       <pagination :total="total" :total-page="totalPage" :current-page="currentPage" @changePageEvent="changePageEvent" />
       <!-- 弹出框 -->
-      <Dialog v-if="isShow" :is-show="isShow" />
+      <Dialog ref="dialog" />
+      <Details />
+      <new-task ref="newTask" />
+      <ops-task ref="opsTask" />
     </div>
+    <!-- 补货警戒线 -->
+    <el-dialog
+      title="工单配置"
+      :visible.sync="dialogVisible"
+      width="630px"
+    >
+      <el-row type="flex" justify="center">
+        <el-form ref="form" :model="formDate" :rules="rules">
+          <el-form-item label="补货警戒线:" label-width="100px" prop="val">
+            <el-input-number v-model="formDate.val" :min="1" :max="100" controls-position="right" style="width:396px" />
+          </el-form-item>
+          <el-row type="flex" justify="center">
+            <el-button style="background-color:#fbf4f0" @click="dialogVisible = false">取消</el-button>
+            <el-button style="background-color:#ff5e20;color:#fff" @click="backOrder">确认</el-button>
+          </el-row>
+        </el-form>
+      </el-row>
+    </el-dialog>
+    <!-- 取消工单 -->
+    <el-dialog
+      :visible.sync="dialog"
+      width="409px"
+      :modal="true"
+    >
+      <el-row type="flex" justify="center" align="middle">
+        <i class="el-icon-warning" style="color:red;padding-right:17px;font-size:21px" />
+        <span>取消工单后，将不能恢复，是否确认取消？</span>
+      </el-row>
+      <el-row type="flex" justify="center" style="margin-top:20px">
+        <el-button size="medium" @click="dialog = false">取 消</el-button>
+        <el-button size="medium" type="primary" @click="getCencalTask">确 定</el-button>
+      </el-row>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import pagination from '../Pagination'
 import Dialog from './components/Dialog.vue'
-import { taskStateList, taskList } from '@/api/task'
+import Details from './components/details.vue'
+import opsTask from './components/opsTask.vue'
+import { taskStateList, taskList, getdeployVal, getAutoTask, getCencalTask } from '@/api/task'
+import NewTask from './components/newTask.vue'
 export default {
   name: 'TableList',
-  components: { pagination, Dialog },
+  components: { pagination, Dialog, Details, NewTask, opsTask },
   data() {
     return {
       options: [],
@@ -102,7 +146,15 @@ export default {
       currentPage: 0, // 1
       list: [],
       loading: false,
-      isShow: false // 点击详情显示或隐藏
+      formDate: {
+        val: '' // 补货警戒线
+      },
+      rules: {
+        val: [{ required: true, message: '补货警戒线必填', trigger: 'blur' }]
+      },
+      dialogVisible: false,
+      dialog: false
+
     }
   },
   computed: {
@@ -115,6 +167,19 @@ export default {
           return (ele.createType = '手动')
         }
       })
+    }
+  },
+  watch: {
+    formDate: {
+      deep: true,
+      handler(val) {
+        if (val.val <= 1) {
+          val.val = 1
+        }
+        if (val.val >= 100) {
+          val.val = 100
+        }
+      }
     }
   },
   mounted() {
@@ -152,6 +217,57 @@ export default {
     // 搜索
     searchList() {
       this.taskList()
+    },
+    // 查看详情
+    details(id) {
+      this.$refs.dialog.isShow = true
+      this.$bus.$emit('getTask', id)
+    },
+    // 配置工单
+    async deploy() {
+      this.dialogVisible = true
+      try {
+        const { data } = await getdeployVal()
+        this.formDate.val = data
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    // 补货警戒线确认
+    async backOrder() {
+      await this.$refs.form.validate()
+      try {
+        const { data } = await getAutoTask({ alertValue: this.formDate.val })
+        if (data) {
+          this.taskList()
+        }
+      } catch (error) {
+        console.log(error)
+      } finally {
+        this.dialogVisible = false
+      }
+    },
+    // 取消工单
+    async getCencalTask() {
+      try {
+        const id = this.$refs.dialog.taskId
+        const { data } = await getCencalTask(id, { desc: '' })
+        this.dialog = false
+        this.$refs.dialog.isShow = false
+        if (data) {
+          this.taskList()
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
+    // 运营新建
+    newTasks() {
+      this.$refs.newTask.dialogVisible = true
+    },
+    // 运维新建
+    opsTask() {
+      this.$refs.opsTask.dialogVisible = true
     }
   }
 }
@@ -166,5 +282,10 @@ export default {
   background: linear-gradient(135deg,#ff9743,#ff5e20)!important;
   color: #fff;
 }
+}
+.el-dialog {
+  ::v-deep .el-input__inner {
+    text-align: center;
+  }
 }
 </style>

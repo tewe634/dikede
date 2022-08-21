@@ -35,14 +35,12 @@ service.interceptors.response.use(
     return response
   },
   async(error) => {
-    console.log(error.response)
     // 被从处理token超时，通过后端返回的信息来判断
     if (error.response?.data === 'token校验失败') {
       await store.commit('user/LOGOUT')
       router.push('/login')
-    } else {
-      Message.error(error.Message || '')
     }
+    Message.error(error)
     return Promise.reject(error)
   }
 )
