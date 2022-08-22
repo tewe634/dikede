@@ -39,8 +39,8 @@ service.interceptors.response.use(
     if (error.response?.data === 'token校验失败') {
       await store.commit('user/LOGOUT')
       router.push('/login')
+      Message.error('token超时')
     }
-    Message.error(error)
     return Promise.reject(error)
   }
 )

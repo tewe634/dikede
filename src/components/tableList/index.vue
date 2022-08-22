@@ -66,10 +66,15 @@
           width="213"
         />
         <el-table-column
-          prop="createTime"
           label="创建日期"
           width="160"
-        />
+        >
+          <template slot-scope="{row}">
+            <div>
+              {{ row.createTime.replace('T',' ') }}
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column
           label="操作"
           width="100"
@@ -84,14 +89,15 @@
       <!-- 弹出框 -->
       <Dialog ref="dialog" />
       <Details />
-      <new-task ref="newTask" />
-      <ops-task ref="opsTask" />
+      <new-task ref="newTask" @toggleTask="taskList" />
+      <ops-task ref="opsTask" @opsTask="taskList" />
     </div>
     <!-- 补货警戒线 -->
     <el-dialog
       title="工单配置"
       :visible.sync="dialogVisible"
       width="630px"
+      :before-close="handleClose"
     >
       <el-row type="flex" justify="center">
         <el-form ref="form" :model="formDate" :rules="rules">
@@ -99,7 +105,7 @@
             <el-input-number v-model="formDate.val" :min="1" :max="100" controls-position="right" style="width:396px" />
           </el-form-item>
           <el-row type="flex" justify="center">
-            <el-button style="background-color:#fbf4f0" @click="dialogVisible = false">取消</el-button>
+            <el-button style="background-color:#fbf4f0" @click="handleClose">取消</el-button>
             <el-button style="background-color:#ff5e20;color:#fff" @click="backOrder">确认</el-button>
           </el-row>
         </el-form>
@@ -268,6 +274,11 @@ export default {
     // 运维新建
     opsTask() {
       this.$refs.opsTask.dialogVisible = true
+    },
+    // 清空表单样式
+    handleClose() {
+      this.dialogVisible = false
+      this.$refs.form.resetFields()
     }
   }
 }

@@ -106,8 +106,11 @@
           <span>{{ taskObj.expect }}</span>
         </div>
       </el-row>
-      <el-row type="flex" justify="center">
-        <el-button style="background-color:#fbf4f0">重新创建</el-button>
+      <el-row v-if="!$route.meta.isRepair" type="flex" justify="center">
+        <el-button style="background-color:#fbf4f0" @click="newTask(innerCode,assignorId)">重新创建</el-button>
+      </el-row>
+      <el-row v-else type="flex" justify="center">
+        <el-button style="background-color:#fbf4f0" @click="opsTask(innerCode,productTypeId,assignorId)">重新创建</el-button>
       </el-row>
     </div>
     <!-- ================ -->
@@ -190,6 +193,15 @@ export default {
     },
     taskId() {
       return this.taskObj?.taskId
+    },
+    assignorId() {
+      return this.taskObj?.assignorId
+    },
+    innerCode() {
+      return this.taskObj?.innerCode
+    },
+    productTypeId() {
+      return this.taskObj?.productTypeId
     }
   },
   watch: {
@@ -207,9 +219,13 @@ export default {
       const { data } = await getTaskState(val)
       this.taskObj = data
     })
+    this.$bus.$on('toggleTask', () => { this.isShow = false })
+    this.$bus.$on('fondIndex', () => { this.isShow = false })
   },
   beforeDestroy() {
     this.$bus.$off('getTask')
+    this.$bus.$off('toggleTask')
+    this.$bus.$off('fondIndex')
   },
   methods: {
   // 点击查看详情
@@ -219,6 +235,13 @@ export default {
     // 取消工单
     cancelTask(id) {
       this.$parent.dialog = true
+    },
+    // 重新创建
+    newTask(id, val) {
+      this.$bus.$emit('newTasks', id, val)
+    },
+    opsTask(id, typeId, val) {
+      this.$bus.$emit('opsTasks', id, typeId, val)
     }
   }
 }

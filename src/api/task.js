@@ -40,3 +40,11 @@ export function getVendingDetail(innerCode) {
 export function getFoundTask(data) {
   return request({ url: '/api/task-service/task/create', method: 'POST', data })
 }
+// 根据售货机获取维修人员列表
+export function getVendingTask(innerCode) {
+  return request({ url: `/api/user-service/user/repairerList/${innerCode}`, method: 'GET' })
+}
+// 获取所有工单类型
+export function getAllTask() {
+  return request({ url: '/api/task-service/taskType/list', method: 'GET' })
+}

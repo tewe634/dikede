@@ -6,10 +6,11 @@
         title="新增工单"
         :visible.sync="dialogVisible"
         width="630px"
+        :before-close="handleClose"
       >
         <el-form ref="form" :model="formDate" :rules="rules" label-width="140px">
           <el-form-item label="设备编号:" prop="innerCode">
-            <el-input v-model="formDate.innerCode" type="text" placeholder="请输入" show-word-limit maxlength="15" size="medium" @blur="getTaskId($event)" />
+            <el-input v-model="formDate.innerCode" type="text" placeholder="请输入" show-word-limit maxlength="15" size="medium" @blur="getTaskId" />
           </el-form-item>
           <el-form-item label="工单类型:" prop="productType">
             <el-select v-model="formDate.productType" placeholder="请选择" size="medium">
@@ -46,7 +47,7 @@
             />
           </el-form-item>
           <el-row type="flex" justify="center" align="center">
-            <el-button style="background-color: #fbf4f0" @click="dialogVisible = false">取消</el-button>
+            <el-button style="background-color: #fbf4f0" @click="handleClose">取消</el-button>
             <el-button style="background-color: #ff5e20;color: #fff" @click="getFoundTask">确认</el-button>
           </el-row>
         </el-form>
@@ -111,7 +112,7 @@ export default {
         assignorId: '',
         desc: '',
         createType: 1,
-        userId: 1
+        userId: this.$store.getters.userId
       },
       rules: {
         innerCode: [{ required: true, message: '设备编号必填', trigger: 'blur' }],
@@ -134,8 +135,8 @@ export default {
       return this.mendList.filter(ele => {
         if (!this.show) {
           ele.expectCapacity = ele.maxCapacity
-          ele.skuImage = ele.sku.skuImage
-          ele.skuName = ele.sku.skuName
+          ele.skuImage = ele.sku?.skuImage
+          ele.skuName = ele.sku?.skuName
           delete ele.channelId
           delete ele.createTime
           delete ele.currentCapacity
@@ -151,11 +152,23 @@ export default {
       })
     }
   },
+  mounted() {
+    this.$bus.$on('newTasks', async(id, val) => {
+      this.formDate.innerCode = id
+      this.formDate.assignorId = val
+      this.formDate.productType = 2
+      this.dialogVisible = true
+      this.getTaskId()
+    })
+  },
+  beforeDestroy() {
+    this.$bus.$off('newTasks')
+  },
   methods: {
   // input失去焦点获取运营人员列表
-    async getTaskId(e) {
+    async getTaskId() {
       try {
-        const { data } = await getPeopleList(e.target.value)
+        const { data } = await getPeopleList(this.formDate.innerCode)
         this.list = data
       } catch (error) {
         console.log(error)
@@ -176,18 +189,37 @@ export default {
     // 创建工单
     async getFoundTask() {
       const details = this.channelCode
-      this.dialogVisible = false
       try {
+        await this.$refs.form.validate()
         await getFoundTask({ ...this.formDate, details })
         this.show = true
-        this.$parent.taskList()
+        this.$bus.$emit('toggleTask')
+        this.$emit('toggleTask') // 刷新列表
+        this.$message.success('新建工单成功~')
+        this.handleClose()
       } catch (error) {
-        console.log(error)
+        console.log(error.response.data)
+        const res = error.response
+        this.$message.error(res?.data)
       }
     },
+    // 补货详情确认
     add() {
       this.show = false
       this.Visible = false
+    },
+    // 清空表单校验规则
+    handleClose() {
+      this.dialogVisible = false
+      this.$refs.form.resetFields()
+      this.formDate = {
+        innerCode: '',
+        productType: '',
+        assignorId: '',
+        desc: '',
+        createType: 1,
+        userId: this.$store.getters.userId
+      }
     }
   }
 }
